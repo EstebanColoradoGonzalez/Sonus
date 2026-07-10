@@ -2,7 +2,19 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!--
+      Autarquía verificable (US-001 · AC6 / Invariante 1 / [RNF-06] / ADR-010):
+      el único permiso runtime solicitado es POST_NOTIFICATIONS (API 33+). Los permisos de
+      Foreground Service se declaran como permisos de instalación. NO se declara INTERNET ni
+      permisos de media runtime (READ_MEDIA_AUDIO / READ_EXTERNAL_STORAGE): el acceso a archivos
+      se autoriza por carpeta vía SAF (US-002).
+    -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+
     <application
+        android:name=".SonusApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"

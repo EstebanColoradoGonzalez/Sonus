@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="onboarding_notifications_title">Mantén el control siempre a mano</string>
+    <string name="onboarding_notifications_body">Sonus usa una notificación para mostrarte los controles de reproducción y seguir sonando mientras usas otras apps o bloqueas la pantalla. Todo ocurre en tu dispositivo: nada se envía a Internet.</string>
+    <string name="onboarding_notifications_allow">Permitir notificaciones</string>
+    <string name="onboarding_notifications_skip">Omitir por ahora</string>
+    <string name="onboarding_notifications_denied_notice">Podrás activar las notificaciones más tarde en Ajustes.</string>
+    <string name="onboarding_notifications_blocked_title">Activa las notificaciones en Ajustes</string>
+    <string name="onboarding_notifications_blocked_body">El diálogo del sistema ya no aparece. Habilita las notificaciones manualmente para ver los controles de reproducción.</string>
+    <string name="onboarding_notifications_open_settings">Abrir Ajustes</string>
+    <string name="onboarding_continue">Continuar</string>
+</resources>

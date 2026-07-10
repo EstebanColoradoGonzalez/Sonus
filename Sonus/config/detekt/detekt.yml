@@ -1,0 +1,30 @@
+style:
+  ForbiddenComment:
+    active: true
+  UnusedImports:
+    active: true
+  WildcardImport:
+    active: true
+  MaxLineLength:
+    maxLineLength: 120
+  MagicNumber:
+    active: true
+    ignorePropertyDeclaration: true
+    ignoreCompanionObjectPropertyDeclaration: true
+    ignoreAnnotated: ['Composable', 'Preview']
+  NewLineAtEndOfFile:
+    active: true
+naming:
+  ClassNaming:
+    classPattern: '[A-Z][A-Za-z0-9]*'
+  FunctionNaming:
+    functionPattern: '[a-z][A-Za-z0-9]*'
+    ignoreAnnotated: ['Composable']
+    excludes: ['**/test/**', '**/androidTest/**']
+  TopLevelPropertyNaming:
+    constantPattern: '[A-Z][_A-Z0-9]*'
+exceptions:
+  TooGenericExceptionCaught:
+    active: true
+  SwallowedException:
+    active: true

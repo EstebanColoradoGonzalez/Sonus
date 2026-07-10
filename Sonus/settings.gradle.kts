@@ -21,3 +21,11 @@ dependencyResolutionManagement {
 
 rootProject.name = "Sonus"
 include(":app")
+include(":core:domain")
+include(":core:data")
+include(":feature:library")
+include(":feature:player")
+include(":feature:playlists")
+include(":feature:settings")
+include(":service:playback")
+include(":service:indexer")

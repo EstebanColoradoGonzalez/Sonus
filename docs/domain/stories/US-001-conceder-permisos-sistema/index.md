@@ -2,7 +2,7 @@
 story_number: US-001
 title: 'Conceder los permisos del sistema'
 slug: 'conceder-permisos-sistema'
-estado: 'Borrador (PO)'
+estado: 'Lista para Revisión'
 autor: 'Esteban Colorado González'
 fecha_creacion: '2026-07-09'
 es_resultado_slicing: false
@@ -20,9 +20,10 @@ slicing_justificacion: ''
 | ----------------------- | ------------- | ---------- | ------------------------------ |
 | Creación HU             | ✅ Completada | 2026-07-09 | Esteban Colorado González (PO) |
 | Análisis Arquitectónico | ⏳ Pendiente  |            | Arquitecto                     |
-| Refinamiento Técnico    | ⏳ Pendiente  |            | Developer                      |
+| Refinamiento Técnico    | ✅ Completada | 2026-07-09 | Esteban Colorado González (Developer) |
 | Estimación              | ⏳ Pendiente  |            | Developer                      |
-| Desarrollo              | ⏳ Pendiente  |            | Developer                      |
+| Desarrollo              | ✅ Completada | 2026-07-09 | Esteban Colorado González (Dev-Rápido) |
+| Revisión                | ⏳ Pendiente  |            | Revisor                        |
 
 ## Archivos de esta Historia
 
