@@ -1,0 +1,46 @@
+.DS_Store
+.vscode/
+.github/
+.claude
+
+Sonus/local.properties
+
+Sonus/**/build/
+Sonus/captures/
+Sonus/.externalNativeBuild
+Sonus/.cxx/
+
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+
+Sonus/.gradle/
+Sonus/gradle/wrapper/gradle-wrapper.properties
+!Sonus/gradle/wrapper/gradle-wrapper.jar
+
+Sonus/*.iml
+Sonus/.idea/workspace.xml
+Sonus/.idea/tasks.xml
+Sonus/.idea/gradle.xml
+Sonus/.idea/assetWizardSettings.xml
+Sonus/.idea/dictionaries
+Sonus/.idea/libraries
+Sonus/.idea/caches/
+Sonus/.idea/modules.xml
+Sonus/.idea/navEditor.xml
+Sonus/.idea/jarRepositories.xml
+Sonus/.idea/compiler.xml
+
+# Método Ceiba - Auto-managed agent files
+.github/agents/metodo-ceiba-*.agent.md
+.claude/commands/metodo-ceiba-*.md
+# Método Ceiba - Auto-managed kanban prompts
+.github/prompts/ceiba-*.prompt.md
+.claude/commands/ceiba-*.md
+# Método Ceiba - Auto-injected agent skills
+.github/skills/
+.claude/skills/
+# Método Ceiba - Metodología exportada (Claude Code)
+.ceiba-metodo/
