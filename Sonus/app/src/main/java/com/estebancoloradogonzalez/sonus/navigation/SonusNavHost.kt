@@ -16,20 +16,22 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.estebancoloradogonzalez.sonus.R
 import com.estebancoloradogonzalez.sonus.feature.settings.presentation.onboarding.NotificationPermissionScreen
+import com.estebancoloradogonzalez.sonus.feature.settings.presentation.onboarding.SourceFoldersScreen
 
 /** Route identifiers for the Single-Activity navigation graph. */
 private object SonusRoute {
     const val ONBOARDING = "onboarding"
     const val SOURCE_FOLDERS = "source_folders"
+    const val SCAN = "scan"
 }
 
 /**
  * Single-Activity navigation graph (ADR-005). Starts on the notification-permission onboarding
- * (US-001) and advances to the Source Folders selection.
+ * (US-001), advances to the Source Folders selection (US-002) and then to the foundational scan.
  *
  * The start destination is fixed to onboarding for now; gating it on
- * `AppSettings.onboardingCompleted` (persisted in Room) is US-004. The Source Folders destination is
- * a temporary placeholder that US-002 will replace.
+ * `AppSettings.onboardingCompleted` (persisted in Room) is US-004. The scan destination is a
+ * temporary placeholder that US-003 will replace.
  */
 @Composable
 fun SonusNavHost() {
@@ -45,14 +47,23 @@ fun SonusNavHost() {
             )
         }
         composable(SonusRoute.SOURCE_FOLDERS) {
-            SourceFoldersPlaceholderScreen()
+            SourceFoldersScreen(
+                onNavigateToScan = {
+                    navController.navigate(SonusRoute.SCAN) {
+                        popUpTo(SonusRoute.SOURCE_FOLDERS) { inclusive = true }
+                    }
+                },
+            )
+        }
+        composable(SonusRoute.SCAN) {
+            ScanPlaceholderScreen()
         }
     }
 }
 
-/** Temporary destination standing in for the Source Folders selection until US-002 is implemented. */
+/** Temporary destination standing in for the foundational scan until US-003 is implemented. */
 @Composable
-private fun SourceFoldersPlaceholderScreen() {
+private fun ScanPlaceholderScreen() {
     Box(
         modifier =
             Modifier
@@ -61,7 +72,7 @@ private fun SourceFoldersPlaceholderScreen() {
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = stringResource(R.string.source_folders_placeholder),
+            text = stringResource(R.string.scan_placeholder),
             style = MaterialTheme.typography.titleMedium,
             textAlign = TextAlign.Center,
         )

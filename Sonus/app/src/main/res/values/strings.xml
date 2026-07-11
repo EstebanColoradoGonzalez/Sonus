@@ -1,4 +1,4 @@
 <resources>
     <string name="app_name">Sonus</string>
-    <string name="source_folders_placeholder">Selección de Carpetas Fuente (próximamente — US-002)</string>
+    <string name="scan_placeholder">Escaneo de la biblioteca (próximamente — US-003)</string>
 </resources>

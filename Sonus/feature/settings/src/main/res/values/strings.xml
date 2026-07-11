@@ -9,4 +9,13 @@
     <string name="onboarding_notifications_blocked_body">El diálogo del sistema ya no aparece. Habilita las notificaciones manualmente para ver los controles de reproducción.</string>
     <string name="onboarding_notifications_open_settings">Abrir Ajustes</string>
     <string name="onboarding_continue">Continuar</string>
+    <string name="source_folders_title">Elige tus Carpetas Fuente</string>
+    <string name="source_folders_body">Selecciona las carpetas donde vive tu música y tus podcasts. Sonus solo descubrirá audio dentro de las carpetas que elijas; nada más se toca y nada sale de tu dispositivo.</string>
+    <string name="source_folders_empty">Aún no has agregado carpetas. Pulsa \"Agregar carpeta\" para elegir dónde buscar tu audio.</string>
+    <string name="source_folders_add">Agregar carpeta</string>
+    <string name="source_folders_continue">Continuar</string>
+    <string name="source_folders_remove">Quitar</string>
+    <string name="source_folders_duplicate_notice">Esa carpeta ya estaba agregada.</string>
+    <string name="source_folders_permission_denied_notice">Se necesita acceso a la carpeta para descubrir tu audio.</string>
+    <string name="source_folders_selection_cancelled_notice">No se agregó ninguna carpeta.</string>
 </resources>

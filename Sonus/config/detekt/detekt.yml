@@ -28,3 +28,11 @@ exceptions:
     active: true
   SwallowedException:
     active: true
+    # SAF permission denial is translated to a value (Boolean), not propagated (principle P1,
+    # interfaces_contract §3.0). Catching SecurityException at the data edge is intentional.
+    ignoredExceptionTypes:
+      - InterruptedException
+      - MalformedURLException
+      - NumberFormatException
+      - ParseException
+      - SecurityException
