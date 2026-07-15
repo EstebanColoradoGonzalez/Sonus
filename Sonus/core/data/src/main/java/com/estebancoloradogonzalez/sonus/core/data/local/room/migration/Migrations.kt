@@ -79,3 +79,32 @@ val MIGRATION_1_2: Migration =
             CATALOG_SENTINEL_SEED.forEach(db::execSQL)
         }
     }
+
+/**
+ * SQL that seeds the `AppSettings` singleton (`id = 1`, domain_and_state_model §6.1) with its Big
+ * Bang defaults: `onboardingCompleted = 0` (forces the first-run flow) and `themePreference =
+ * SYSTEM`. Shared by [MIGRATION_2_3] (existing installs) and the creation callback (fresh installs).
+ */
+val APP_SETTINGS_SINGLETON_SEED: List<String> =
+    listOf(
+        "INSERT OR IGNORE INTO `app_settings` " +
+            "(`id`, `onboardingCompleted`, `themePreference`) VALUES (1, 0, 'SYSTEM')",
+    )
+
+/**
+ * Adds the `AppSettings` singleton on top of the catalog database (US-004). The `CREATE TABLE`
+ * mirrors Room's generated schema for version 3; the singleton is seeded once the table exists.
+ * Validated by `MigrationTest` against the exported `3.json`.
+ */
+val MIGRATION_2_3: Migration =
+    object : Migration(2, 3) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `app_settings` " +
+                    "(`id` INTEGER NOT NULL, `onboardingCompleted` INTEGER NOT NULL, " +
+                    "`themePreference` TEXT NOT NULL, PRIMARY KEY(`id`))",
+            )
+
+            APP_SETTINGS_SINGLETON_SEED.forEach(db::execSQL)
+        }
+    }

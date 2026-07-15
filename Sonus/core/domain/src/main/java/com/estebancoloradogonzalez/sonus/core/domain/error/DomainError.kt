@@ -71,6 +71,19 @@ sealed class DomainError(
         ) {
         override val details: ErrorDetails = ErrorDetails.Cause(cause)
     }
+
+    /**
+     * Persisting a setting into the `AppSettings` singleton failed at the storage border
+     * (`TRG-CFG-02`, §3.2). WARNING and recoverable: the operation is idempotent and retriable, so
+     * the caller degrades gracefully without aborting its flow (P3).
+     */
+    data object SettingsPersistenceFailed : DomainError(
+        code = "ERR_SETTINGS_PERSISTENCE_FAILED",
+        severity = Severity.WARNING,
+        recoverable = true,
+    ) {
+        override val details: ErrorDetails = ErrorDetails.Io(IoCauseCode.WRITE_FAILED)
+    }
 }
 
 /** Determines the notification channel of a failure (interfaces_contract §3.1). */
