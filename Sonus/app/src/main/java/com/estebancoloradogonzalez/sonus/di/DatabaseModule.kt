@@ -2,8 +2,16 @@ package com.estebancoloradogonzalez.sonus.di
 
 import android.content.Context
 import androidx.room.Room
+import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.estebancoloradogonzalez.sonus.core.data.local.room.SonusDatabase
+import com.estebancoloradogonzalez.sonus.core.data.local.room.dao.AlbumDao
+import com.estebancoloradogonzalez.sonus.core.data.local.room.dao.ArtistDao
+import com.estebancoloradogonzalez.sonus.core.data.local.room.dao.GenreDao
 import com.estebancoloradogonzalez.sonus.core.data.local.room.dao.SourceFolderDao
+import com.estebancoloradogonzalez.sonus.core.data.local.room.dao.TrackDao
+import com.estebancoloradogonzalez.sonus.core.data.local.room.migration.CATALOG_SENTINEL_SEED
+import com.estebancoloradogonzalez.sonus.core.data.local.room.migration.MIGRATION_1_2
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -13,7 +21,9 @@ import javax.inject.Singleton
 
 /**
  * Provides the single Room database (ADR-001, C-03) and its DAOs. Lives in `:app` (composition root)
- * because it wires the infrastructure instance into the Hilt graph.
+ * because it wires the infrastructure instance into the Hilt graph. The catalog schema arrives in
+ * version 2 (US-003): [MIGRATION_1_2] upgrades existing installs and the creation callback seeds the
+ * dimension sentinels (§6.1) on fresh installs.
  */
 @Module
 @InstallIn(SingletonComponent::class)
@@ -27,10 +37,31 @@ object DatabaseModule {
             context,
             SonusDatabase::class.java,
             DATABASE_NAME,
-        ).build()
+        ).addMigrations(MIGRATION_1_2)
+            .addCallback(SentinelSeedCallback)
+            .build()
 
     @Provides
     fun provideSourceFolderDao(database: SonusDatabase): SourceFolderDao = database.sourceFolderDao()
 
+    @Provides
+    fun provideArtistDao(database: SonusDatabase): ArtistDao = database.artistDao()
+
+    @Provides
+    fun provideGenreDao(database: SonusDatabase): GenreDao = database.genreDao()
+
+    @Provides
+    fun provideAlbumDao(database: SonusDatabase): AlbumDao = database.albumDao()
+
+    @Provides
+    fun provideTrackDao(database: SonusDatabase): TrackDao = database.trackDao()
+
     private const val DATABASE_NAME = "sonus.db"
+
+    /** Seeds the dimension sentinels on a fresh install (the migration covers upgrades). */
+    private object SentinelSeedCallback : RoomDatabase.Callback() {
+        override fun onCreate(db: SupportSQLiteDatabase) {
+            CATALOG_SENTINEL_SEED.forEach(db::execSQL)
+        }
+    }
 }

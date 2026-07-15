@@ -44,6 +44,33 @@ sealed class DomainError(
         ) {
         override val details: ErrorDetails = ErrorDetails.Entity(kind, id)
     }
+
+    /**
+     * A source folder lost its persisted SAF permission or became inaccessible mid-operation
+     * (§3.2). During a scan it travels wrapped inside [ScanAborted].
+     */
+    data object PermissionRevoked : DomainError(
+        code = "ERR_PERMISSION_REVOKED",
+        severity = Severity.WARNING,
+        recoverable = true,
+    ) {
+        override val details: ErrorDetails? = null
+    }
+
+    /**
+     * The foundational scan was interrupted (revoked permission or unreachable folder,
+     * `TRG-LIB-03`/`TRG-LIB-04`, §3.2). Wraps the underlying [cause]; the last coherent catalog is
+     * preserved.
+     */
+    data class ScanAborted(
+        val cause: DomainError,
+    ) : DomainError(
+            code = "ERR_SCAN_ABORTED",
+            severity = Severity.WARNING,
+            recoverable = true,
+        ) {
+        override val details: ErrorDetails = ErrorDetails.Cause(cause)
+    }
 }
 
 /** Determines the notification channel of a failure (interfaces_contract §3.1). */

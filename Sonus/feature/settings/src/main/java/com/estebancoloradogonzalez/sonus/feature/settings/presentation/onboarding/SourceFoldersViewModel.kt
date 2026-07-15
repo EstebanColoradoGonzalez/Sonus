@@ -93,6 +93,9 @@ class SourceFoldersViewModel
                 DomainError.DuplicateSourceFolder -> SourceFoldersEvent.NotifyDuplicate
                 DomainError.PermissionDenied -> SourceFoldersEvent.NotifyPermissionDenied
                 is DomainError.EntityNotFound -> SourceFoldersEvent.NotifyPermissionDenied
+                // Scan-related failures cannot arise from add-folder; mapped defensively (no else).
+                DomainError.PermissionRevoked -> SourceFoldersEvent.NotifyPermissionDenied
+                is DomainError.ScanAborted -> SourceFoldersEvent.NotifyPermissionDenied
             }
 
         private fun emit(event: SourceFoldersEvent) {

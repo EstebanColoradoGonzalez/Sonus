@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="scan_title">Organizando tu biblioteca</string>
+    <string name="scan_phase_starting">Preparando el escaneo…</string>
+    <string name="scan_phase_scanning">Escaneando tus archivos…</string>
+    <string name="scan_phase_syncing">Guardando tu biblioteca…</string>
+    <string name="scan_progress_count">%1$d / %2$d archivos</string>
+    <string name="scan_progress_indeterminate">%1$d archivos encontrados…</string>
+    <string name="scan_cancel">Cancelar</string>
+    <string name="scan_finished_title">¡Tu biblioteca está lista!</string>
+    <string name="scan_summary_added">%1$d pistas encontradas</string>
+    <string name="scan_summary_unsupported">%1$d archivos no compatibles</string>
+    <string name="scan_aborted_title">No se pudo completar el escaneo</string>
+    <string name="scan_aborted_notice">No se pudo completar el escaneo. Tu biblioteca se conservó tal como estaba.</string>
+    <string name="scan_cancelled_notice">Escaneo cancelado. Se conservó lo que se alcanzó a organizar.</string>
+    <string name="scan_retry">Reintentar</string>
+    <string name="scan_back_to_folders">Volver a Carpetas Fuente</string>
+    <string name="library_landing_title">Tu biblioteca</string>
+    <string name="library_landing_body">Aquí verás tu colección organizada, lista para explorar y reproducir.</string>
+</resources>
