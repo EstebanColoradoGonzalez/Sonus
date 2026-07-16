@@ -18,4 +18,15 @@
     <string name="source_folders_duplicate_notice">Esa carpeta ya estaba agregada.</string>
     <string name="source_folders_permission_denied_notice">Se necesita acceso a la carpeta para descubrir tu audio.</string>
     <string name="source_folders_selection_cancelled_notice">No se agregó ninguna carpeta.</string>
+    <string name="settings_source_folders_title">Carpetas Fuente</string>
+    <string name="settings_source_folders_body">Estas son las carpetas donde Sonus busca tu audio. Agrega otra para ampliar tu biblioteca; las carpetas y las pistas que ya tienes se conservan intactas.</string>
+    <string name="settings_source_folders_empty">Aún no has agregado carpetas. Pulsa \"Agregar carpeta\" para elegir dónde buscar tu audio.</string>
+    <string name="settings_source_folders_add">Agregar carpeta</string>
+    <string name="settings_source_folders_back">Volver</string>
+    <string name="settings_source_folders_added_notice">Carpeta agregada.</string>
+    <string name="settings_source_folders_overlap_notice">Esta carpeta se solapa con otra ya agregada; las pistas repetidas no se duplicarán.</string>
+    <string name="settings_source_folders_duplicate_notice">La carpeta ya estaba agregada.</string>
+    <string name="settings_source_folders_permission_denied_notice">Se necesita acceso a la carpeta para descubrir tu audio.</string>
+    <string name="settings_source_folders_cancelled_notice">No se agregó ninguna carpeta.</string>
+    <string name="settings_source_folders_pending_scan">Hay contenido nuevo pendiente de escanear.</string>
 </resources>

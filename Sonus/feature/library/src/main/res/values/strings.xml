@@ -17,4 +17,5 @@
     <string name="scan_back_to_folders">Volver a Carpetas Fuente</string>
     <string name="library_landing_title">Tu biblioteca</string>
     <string name="library_landing_body">Aquí verás tu colección organizada, lista para explorar y reproducir.</string>
+    <string name="library_add_source_folder">Agregar carpeta</string>
 </resources>

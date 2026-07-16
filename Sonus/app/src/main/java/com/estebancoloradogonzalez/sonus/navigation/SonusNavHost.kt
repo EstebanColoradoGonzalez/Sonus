@@ -8,6 +8,7 @@ import com.estebancoloradogonzalez.sonus.feature.library.presentation.LibraryLan
 import com.estebancoloradogonzalez.sonus.feature.library.presentation.scan.ScanScreen
 import com.estebancoloradogonzalez.sonus.feature.settings.presentation.onboarding.NotificationPermissionScreen
 import com.estebancoloradogonzalez.sonus.feature.settings.presentation.onboarding.SourceFoldersScreen
+import com.estebancoloradogonzalez.sonus.feature.settings.presentation.settings.SettingsSourceFoldersScreen
 
 /** Route identifiers for the Single-Activity navigation graph. */
 private object SonusRoute {
@@ -15,6 +16,7 @@ private object SonusRoute {
     const val SOURCE_FOLDERS = "source_folders"
     const val SCAN = "scan"
     const val LIBRARY = "library"
+    const val SETTINGS_SOURCE_FOLDERS = "settings_source_folders"
 }
 
 /**
@@ -71,7 +73,16 @@ fun SonusNavHost(
             )
         }
         composable(SonusRoute.LIBRARY) {
-            LibraryLandingScreen()
+            LibraryLandingScreen(
+                onNavigateToSourceFolders = {
+                    navController.navigate(SonusRoute.SETTINGS_SOURCE_FOLDERS)
+                },
+            )
+        }
+        composable(SonusRoute.SETTINGS_SOURCE_FOLDERS) {
+            SettingsSourceFoldersScreen(
+                onNavigateBack = { navController.popBackStack() },
+            )
         }
     }
 }
