@@ -22,4 +22,10 @@ sealed interface SettingsSourceFoldersEvent {
 
     /** Non-intrusive notice: no folder was added because the picker was dismissed (AC5). */
     data object NotifySelectionCancelled : SettingsSourceFoldersEvent
+
+    /** Non-intrusive confirmation: the folder and its tracks were removed in cascade (US-006 AC1). */
+    data object NotifyFolderRemoved : SettingsSourceFoldersEvent
+
+    /** Non-intrusive notice: the folder was already gone when confirming (US-006 AC9, `ERR_ENTITY_NOT_FOUND`). */
+    data object NotifyRemoveFailed : SettingsSourceFoldersEvent
 }

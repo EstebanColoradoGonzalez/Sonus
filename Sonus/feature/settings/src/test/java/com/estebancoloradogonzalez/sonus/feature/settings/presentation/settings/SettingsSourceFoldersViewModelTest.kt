@@ -6,7 +6,9 @@ import com.estebancoloradogonzalez.sonus.core.domain.model.SourceFolder
 import com.estebancoloradogonzalez.sonus.core.domain.result.OperationResult
 import com.estebancoloradogonzalez.sonus.core.domain.usecase.AddSourceFolderUseCase
 import com.estebancoloradogonzalez.sonus.core.domain.usecase.DetectSourceFolderOverlapUseCase
+import com.estebancoloradogonzalez.sonus.core.domain.usecase.GetSourceFolderRemovalImpactUseCase
 import com.estebancoloradogonzalez.sonus.core.domain.usecase.ObserveSourceFoldersUseCase
+import com.estebancoloradogonzalez.sonus.core.domain.usecase.RemoveSourceFolderUseCase
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
 import io.mockk.every
@@ -27,6 +29,8 @@ class SettingsSourceFoldersViewModelTest {
     private val observeSourceFolders = mockk<ObserveSourceFoldersUseCase>()
     private val detectSourceFolderOverlap = mockk<DetectSourceFolderOverlapUseCase>()
     private val addSourceFolder = mockk<AddSourceFolderUseCase>()
+    private val getRemovalImpact = mockk<GetSourceFolderRemovalImpactUseCase>()
+    private val removeSourceFolder = mockk<RemoveSourceFolderUseCase>()
 
     @BeforeEach
     fun setUp() {
@@ -44,6 +48,8 @@ class SettingsSourceFoldersViewModelTest {
             observeSourceFolders,
             detectSourceFolderOverlap,
             addSourceFolder,
+            getRemovalImpact,
+            removeSourceFolder,
         )
     }
 
@@ -141,5 +147,78 @@ class SettingsSourceFoldersViewModelTest {
                 vm.onCommand(SettingsSourceFoldersCommand.SelectionCancelled)
                 assertThat(awaitItem()).isEqualTo(SettingsSourceFoldersEvent.NotifySelectionCancelled)
             }
+        }
+
+    @Test
+    fun `raises the removal dialog with impact and not-last flag on RemoveFolderClicked`() =
+        runTest {
+            // US-006 AC1 — two folders, impact reported, not the last one
+            coEvery { getRemovalImpact(1L) } returns 7
+            val vm = viewModel(listOf(folder(1L), folder(2L)))
+
+            vm.onCommand(SettingsSourceFoldersCommand.RemoveFolderClicked(1L, "Folder 1"))
+
+            val pending = vm.uiState.value.pendingRemoval
+            assertThat(pending).isNotNull()
+            assertThat(pending!!.trackCount).isEqualTo(7)
+            assertThat(pending.isLastFolder).isFalse()
+        }
+
+    @Test
+    fun `flags the removal dialog as last folder when only one remains`() =
+        runTest {
+            // US-006 AC8 — removing the only folder empties the library
+            coEvery { getRemovalImpact(1L) } returns 3
+            val vm = viewModel(listOf(folder(1L)))
+
+            vm.onCommand(SettingsSourceFoldersCommand.RemoveFolderClicked(1L, "Folder 1"))
+
+            assertThat(vm.uiState.value.pendingRemoval?.isLastFolder).isTrue()
+        }
+
+    @Test
+    fun `removes and notifies clearing the dialog on RemoveFolderConfirmed`() =
+        runTest {
+            // US-006 AC1/AC2 — confirmed removal
+            coEvery { getRemovalImpact(1L) } returns 2
+            coEvery { removeSourceFolder(any()) } returns OperationResult.Success(Unit)
+            val vm = viewModel(listOf(folder(1L), folder(2L)))
+            vm.onCommand(SettingsSourceFoldersCommand.RemoveFolderClicked(1L, "Folder 1"))
+
+            vm.events.test {
+                vm.onCommand(SettingsSourceFoldersCommand.RemoveFolderConfirmed)
+                assertThat(awaitItem()).isEqualTo(SettingsSourceFoldersEvent.NotifyFolderRemoved)
+            }
+            assertThat(vm.uiState.value.pendingRemoval).isNull()
+        }
+
+    @Test
+    fun `notifies failure when the folder is gone on RemoveFolderConfirmed`() =
+        runTest {
+            // US-006 AC9 — ERR_ENTITY_NOT_FOUND
+            coEvery { getRemovalImpact(1L) } returns 0
+            coEvery { removeSourceFolder(any()) } returns
+                OperationResult.Failure(DomainError.EntityNotFound("SourceFolder", 1L))
+            val vm = viewModel(listOf(folder(1L)))
+            vm.onCommand(SettingsSourceFoldersCommand.RemoveFolderClicked(1L, "Folder 1"))
+
+            vm.events.test {
+                vm.onCommand(SettingsSourceFoldersCommand.RemoveFolderConfirmed)
+                assertThat(awaitItem()).isEqualTo(SettingsSourceFoldersEvent.NotifyRemoveFailed)
+            }
+            assertThat(vm.uiState.value.pendingRemoval).isNull()
+        }
+
+    @Test
+    fun `dismisses the removal dialog without effect on RemoveFolderDismissed`() =
+        runTest {
+            // US-006 AC6 — cancellation leaves everything intact
+            coEvery { getRemovalImpact(1L) } returns 5
+            val vm = viewModel(listOf(folder(1L)))
+            vm.onCommand(SettingsSourceFoldersCommand.RemoveFolderClicked(1L, "Folder 1"))
+
+            vm.onCommand(SettingsSourceFoldersCommand.RemoveFolderDismissed)
+
+            assertThat(vm.uiState.value.pendingRemoval).isNull()
         }
 }

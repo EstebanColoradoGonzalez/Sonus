@@ -15,6 +15,9 @@ class FakeSourceFolderRepository : SourceFolderRepository {
     private val folders = MutableStateFlow<List<SourceFolder>>(emptyList())
     private var nextId = 1L
 
+    /** Configurable track counts per folder id, consumed by [countTracksUnder] (removal impact). */
+    val tracksUnder = mutableMapOf<FolderId, Int>()
+
     override fun observeAll(): Flow<List<SourceFolder>> = folders
 
     override suspend fun exists(treeUri: String): Boolean = folders.value.any { it.treeUri == treeUri }
@@ -26,6 +29,8 @@ class FakeSourceFolderRepository : SourceFolderRepository {
     }
 
     override suspend fun findById(id: FolderId): SourceFolder? = folders.value.firstOrNull { it.id == id }
+
+    override suspend fun countTracksUnder(id: FolderId): Int = tracksUnder[id] ?: 0
 
     override suspend fun remove(id: FolderId) {
         folders.update { current -> current.filterNot { it.id == id } }

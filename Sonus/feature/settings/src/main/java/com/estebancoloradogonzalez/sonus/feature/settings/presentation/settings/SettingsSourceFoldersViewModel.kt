@@ -7,7 +7,9 @@ import com.estebancoloradogonzalez.sonus.core.domain.error.DomainError
 import com.estebancoloradogonzalez.sonus.core.domain.result.OperationResult
 import com.estebancoloradogonzalez.sonus.core.domain.usecase.AddSourceFolderUseCase
 import com.estebancoloradogonzalez.sonus.core.domain.usecase.DetectSourceFolderOverlapUseCase
+import com.estebancoloradogonzalez.sonus.core.domain.usecase.GetSourceFolderRemovalImpactUseCase
 import com.estebancoloradogonzalez.sonus.core.domain.usecase.ObserveSourceFoldersUseCase
+import com.estebancoloradogonzalez.sonus.core.domain.usecase.RemoveSourceFolderUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -38,6 +40,8 @@ class SettingsSourceFoldersViewModel
         observeSourceFolders: ObserveSourceFoldersUseCase,
         private val detectSourceFolderOverlap: DetectSourceFolderOverlapUseCase,
         private val addSourceFolder: AddSourceFolderUseCase,
+        private val getRemovalImpact: GetSourceFolderRemovalImpactUseCase,
+        private val removeSourceFolder: RemoveSourceFolderUseCase,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(SettingsSourceFoldersUiState())
         val uiState: StateFlow<SettingsSourceFoldersUiState> = _uiState.asStateFlow()
@@ -64,6 +68,11 @@ class SettingsSourceFoldersViewModel
                 is SettingsSourceFoldersCommand.FolderPicked -> addFolder(command.treeUri)
                 SettingsSourceFoldersCommand.SelectionCancelled ->
                     emit(SettingsSourceFoldersEvent.NotifySelectionCancelled)
+                is SettingsSourceFoldersCommand.RemoveFolderClicked ->
+                    requestRemoval(command.id, command.displayPath)
+                SettingsSourceFoldersCommand.RemoveFolderConfirmed -> confirmRemoval()
+                SettingsSourceFoldersCommand.RemoveFolderDismissed ->
+                    _uiState.update { it.copy(pendingRemoval = null) }
             }
 
         private fun addFolder(treeUri: String) {
@@ -82,6 +91,38 @@ class SettingsSourceFoldersViewModel
                         )
                     }
                     is OperationResult.Failure -> emit(result.error.toNotice())
+                }
+            }
+        }
+
+        private fun requestRemoval(
+            id: Long,
+            displayPath: String,
+        ) {
+            viewModelScope.launch {
+                // Impact drives an informed decision (Invariant 3/5); isLast is read from the observed list.
+                val trackCount = getRemovalImpact(id)
+                _uiState.update { state ->
+                    state.copy(
+                        pendingRemoval =
+                            PendingRemovalUi(
+                                id = id,
+                                displayPath = displayPath,
+                                trackCount = trackCount,
+                                isLastFolder = state.folders.size == 1,
+                            ),
+                    )
+                }
+            }
+        }
+
+        private fun confirmRemoval() {
+            val pending = _uiState.value.pendingRemoval ?: return
+            viewModelScope.launch {
+                _uiState.update { it.copy(pendingRemoval = null) }
+                when (removeSourceFolder(LibraryCommand.RemoveSourceFolder(pending.id))) {
+                    is OperationResult.Success -> emit(SettingsSourceFoldersEvent.NotifyFolderRemoved)
+                    is OperationResult.Failure -> emit(SettingsSourceFoldersEvent.NotifyRemoveFailed)
                 }
             }
         }

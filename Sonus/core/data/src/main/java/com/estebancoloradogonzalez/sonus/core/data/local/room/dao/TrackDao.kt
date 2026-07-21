@@ -28,4 +28,8 @@ interface TrackDao {
 
     @Query("SELECT COUNT(*) FROM track WHERE availability = :availability")
     suspend fun countByAvailability(availability: TrackAvailability): Int
+
+    /** Tracks discovered under a Source Folder (removal impact, US-006 `TRG-LIB-02`). */
+    @Query("SELECT COUNT(*) FROM track WHERE sourceFolderId = :sourceFolderId")
+    suspend fun countBySourceFolder(sourceFolderId: Long): Int
 }

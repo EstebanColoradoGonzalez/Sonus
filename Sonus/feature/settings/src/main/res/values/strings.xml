@@ -29,4 +29,12 @@
     <string name="settings_source_folders_permission_denied_notice">Se necesita acceso a la carpeta para descubrir tu audio.</string>
     <string name="settings_source_folders_cancelled_notice">No se agregó ninguna carpeta.</string>
     <string name="settings_source_folders_pending_scan">Hay contenido nuevo pendiente de escanear.</string>
+    <string name="settings_source_folders_remove">Quitar</string>
+    <string name="settings_source_folders_remove_title">Quitar «%1$s»</string>
+    <string name="settings_source_folders_remove_impact">Se eliminarán %1$d pistas de tu biblioteca. Esta acción no se puede deshacer.</string>
+    <string name="settings_source_folders_remove_last_warning">Es tu única carpeta: tu biblioteca quedará vacía.</string>
+    <string name="settings_source_folders_remove_confirm">Quitar</string>
+    <string name="settings_source_folders_remove_cancel">Cancelar</string>
+    <string name="settings_source_folders_removed_notice">Carpeta quitada.</string>
+    <string name="settings_source_folders_remove_failed_notice">Esa carpeta ya no existe; la lista se actualizó.</string>
 </resources>

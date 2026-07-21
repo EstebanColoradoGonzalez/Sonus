@@ -21,6 +21,14 @@ interface SourceFolderRepository {
     /** The folder with this id, or null if it does not exist. */
     suspend fun findById(id: FolderId): SourceFolder?
 
-    /** Delete the folder with this id (light removal, no cascade in US-002). */
+    /** How many tracks were discovered under this folder (removal impact, US-006 `TRG-LIB-02`). */
+    suspend fun countTracksUnder(id: FolderId): Int
+
+    /**
+     * Delete the folder with this id. Its tracks are removed in cascade (`onDelete = CASCADE`,
+     * model §3) and the orphan dimensions (Artist/Album/Genre no longer referenced, except the
+     * `id = 1` sentinels) are purged in the same transaction (§6.2, US-006). Before any track exists
+     * (onboarding, US-002) the purge is a harmless no-op.
+     */
     suspend fun remove(id: FolderId)
 }

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -61,6 +62,8 @@ fun SettingsSourceFoldersScreen(
     val duplicateNotice = stringResource(R.string.settings_source_folders_duplicate_notice)
     val permissionDeniedNotice = stringResource(R.string.settings_source_folders_permission_denied_notice)
     val cancelledNotice = stringResource(R.string.settings_source_folders_cancelled_notice)
+    val removedNotice = stringResource(R.string.settings_source_folders_removed_notice)
+    val removeFailedNotice = stringResource(R.string.settings_source_folders_remove_failed_notice)
 
     val folderPickerLauncher =
         rememberLauncherForActivityResult(
@@ -87,8 +90,20 @@ fun SettingsSourceFoldersScreen(
                     scope.launch { snackbarHostState.showSnackbar(permissionDeniedNotice) }
                 SettingsSourceFoldersEvent.NotifySelectionCancelled ->
                     scope.launch { snackbarHostState.showSnackbar(cancelledNotice) }
+                SettingsSourceFoldersEvent.NotifyFolderRemoved ->
+                    scope.launch { snackbarHostState.showSnackbar(removedNotice) }
+                SettingsSourceFoldersEvent.NotifyRemoveFailed ->
+                    scope.launch { snackbarHostState.showSnackbar(removeFailedNotice) }
             }
         }
+    }
+
+    uiState.pendingRemoval?.let { pending ->
+        RemoveFolderDialog(
+            pending = pending,
+            onConfirm = { viewModel.onCommand(SettingsSourceFoldersCommand.RemoveFolderConfirmed) },
+            onDismiss = { viewModel.onCommand(SettingsSourceFoldersCommand.RemoveFolderDismissed) },
+        )
     }
 
     Scaffold(
@@ -109,8 +124,52 @@ fun SettingsSourceFoldersScreen(
             padding = innerPadding,
             uiState = uiState,
             onAddFolder = { viewModel.onCommand(SettingsSourceFoldersCommand.AddFolderClicked) },
+            onRemoveFolder = { folder ->
+                viewModel.onCommand(SettingsSourceFoldersCommand.RemoveFolderClicked(folder.id, folder.displayPath))
+            },
         )
     }
+}
+
+@Composable
+private fun RemoveFolderDialog(
+    pending: PendingRemovalUi,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = stringResource(R.string.settings_source_folders_remove_title, pending.displayPath)) },
+        text = {
+            Column {
+                Text(
+                    text =
+                        stringResource(
+                            R.string.settings_source_folders_remove_impact,
+                            pending.trackCount,
+                        ),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                if (pending.isLastFolder) {
+                    Text(
+                        text = stringResource(R.string.settings_source_folders_remove_last_warning),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(top = 8.dp),
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(text = stringResource(R.string.settings_source_folders_remove_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(R.string.settings_source_folders_remove_cancel))
+            }
+        },
+    )
 }
 
 @Composable
@@ -118,6 +177,7 @@ private fun SettingsSourceFoldersContent(
     padding: PaddingValues,
     uiState: SettingsSourceFoldersUiState,
     onAddFolder: () -> Unit,
+    onRemoveFolder: (SourceFolderUi) -> Unit,
 ) {
     Column(
         modifier =
@@ -150,7 +210,7 @@ private fun SettingsSourceFoldersContent(
             } else {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                     items(items = uiState.folders, key = { it.id }) { folder ->
-                        SourceFolderRow(folder = folder)
+                        SourceFolderRow(folder = folder, onRemove = { onRemoveFolder(folder) })
                     }
                 }
             }
@@ -179,7 +239,10 @@ private fun PendingScanBanner(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun SourceFolderRow(folder: SourceFolderUi) {
+private fun SourceFolderRow(
+    folder: SourceFolderUi,
+    onRemove: () -> Unit,
+) {
     Row(
         modifier =
             Modifier
@@ -193,5 +256,8 @@ private fun SourceFolderRow(folder: SourceFolderUi) {
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.weight(1f),
         )
+        TextButton(onClick = onRemove) {
+            Text(text = stringResource(R.string.settings_source_folders_remove))
+        }
     }
 }
