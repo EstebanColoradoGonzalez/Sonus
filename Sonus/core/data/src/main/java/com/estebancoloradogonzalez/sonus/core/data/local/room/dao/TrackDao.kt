@@ -19,6 +19,14 @@ interface TrackDao {
     @Query("SELECT id FROM track WHERE uri = :uri")
     suspend fun findIdByUri(uri: String): Long?
 
+    /**
+     * Lightweight `uri → fileLastModifiedMs` projection driving the `INCREMENTAL` diff (US-008): the
+     * scan compares each discovered file's mtime against these fingerprints to skip unchanged files
+     * before re-extracting their metadata (AC1). Projects two columns instead of loading full rows.
+     */
+    @Query("SELECT uri, fileLastModifiedMs FROM track")
+    suspend fun fingerprints(): List<TrackFingerprint>
+
     /** Purges tracks whose URI is no longer present in the file system (Invariant 2). */
     @Query("DELETE FROM track WHERE uri NOT IN (:uris)")
     suspend fun deleteWhereUriNotIn(uris: List<String>): Int

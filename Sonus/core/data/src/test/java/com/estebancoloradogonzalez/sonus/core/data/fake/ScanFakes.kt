@@ -28,11 +28,15 @@ class FakeSafDataSource(
 class FakeId3DataSource(
     private val metadataByUri: Map<String, RawTrackMetadata> = emptyMap(),
 ) : Id3DataSource {
+    /** Every URI whose metadata was read, in order — lets tests assert unchanged files are skipped (AC1). */
+    val readUris = mutableListOf<String>()
+
     override fun readMetadata(
         uri: String,
         mimeType: String,
-    ): RawTrackMetadata =
-        metadataByUri[uri]
+    ): RawTrackMetadata {
+        readUris.add(uri)
+        return metadataByUri[uri]
             ?: RawTrackMetadata(
                 title = null,
                 artistName = null,
@@ -45,6 +49,7 @@ class FakeId3DataSource(
                 hasEmbeddedArtwork = false,
                 availability = TrackAvailability.AVAILABLE,
             )
+    }
 }
 
 /** Records every scan-state emission. */

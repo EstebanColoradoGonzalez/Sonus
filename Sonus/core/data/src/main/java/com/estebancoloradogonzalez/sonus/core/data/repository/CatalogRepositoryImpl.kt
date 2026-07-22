@@ -23,6 +23,12 @@ import javax.inject.Inject
  * the deterministic write to [CatalogSynchronizer] while publishing `Syncing`. A lost folder access
  * (`SecurityException`) is caught at this border and returned as a value —
  * `ScanAborted(PermissionRevoked)` — preserving the last coherent catalog (§5.3, principle P1).
+ *
+ * In [ScanMode.INCREMENTAL] the real diff by `fileLastModifiedMs` (US-008) skips unchanged files
+ * *before* extracting their metadata (AC1): a discovered file whose mtime equals the fingerprint
+ * persisted for its URI is neither re-read nor re-written, while new or modified files are processed
+ * as usual. The purge still runs against the *full* discovered URI set, so skipped-but-present tracks
+ * are never removed. [ScanMode.FULL] processes every discovered file regardless of fingerprints (AC8).
  */
 class CatalogRepositoryImpl
     @Inject
@@ -45,14 +51,20 @@ class CatalogRepositoryImpl
                             safDataSource.listAudioFiles(folder.treeUri).map { folder.id to it }
                         }
                     val total = discovered.size
-                    val scanned = ArrayList<ScannedTrack>(total)
+                    val fingerprints =
+                        if (mode == ScanMode.INCREMENTAL) catalogSynchronizer.indexedFingerprints() else emptyMap()
+                    val processed = ArrayList<ScannedTrack>(total)
                     discovered.forEachIndexed { index, (folderId, file) ->
-                        val metadata = id3DataSource.readMetadata(file.uri, file.mimeType)
-                        scanned.add(metadata.toScannedTrack(file, folderId))
+                        val unchanged =
+                            mode == ScanMode.INCREMENTAL && fingerprints[file.uri] == file.lastModifiedMs
+                        if (!unchanged) {
+                            val metadata = id3DataSource.readMetadata(file.uri, file.mimeType)
+                            processed.add(metadata.toScannedTrack(file, folderId))
+                        }
                         scanStateEmitter.update(ScanState.Scanning(processed = index + 1, total = total))
                     }
                     scanStateEmitter.update(ScanState.Syncing)
-                    OperationResult.Success(catalogSynchronizer.sync(scanned))
+                    OperationResult.Success(catalogSynchronizer.sync(processed, discovered.map { it.second.uri }))
                 } catch (securityException: SecurityException) {
                     OperationResult.Failure(DomainError.ScanAborted(DomainError.PermissionRevoked))
                 }
