@@ -6,6 +6,7 @@ import androidx.room.TypeConverters
 import com.estebancoloradogonzalez.sonus.core.data.local.room.converter.RoomTypeConverters
 import com.estebancoloradogonzalez.sonus.core.data.local.room.dao.AlbumDao
 import com.estebancoloradogonzalez.sonus.core.data.local.room.dao.ArtistDao
+import com.estebancoloradogonzalez.sonus.core.data.local.room.dao.CatalogBrowseDao
 import com.estebancoloradogonzalez.sonus.core.data.local.room.dao.GenreDao
 import com.estebancoloradogonzalez.sonus.core.data.local.room.dao.SettingsDao
 import com.estebancoloradogonzalez.sonus.core.data.local.room.dao.SourceFolderDao
@@ -23,6 +24,9 @@ import com.estebancoloradogonzalez.sonus.core.data.local.room.entity.Track
  * adds the `AppSettings` singleton for the onboarding switch (US-004). The dimension sentinels and
  * the `AppSettings` singleton (`id = 1`, §6.1) are seeded by the migrations (existing installs) and
  * by the creation callback (fresh installs), wired in `DatabaseModule`.
+ *
+ * `catalogBrowseDao` (US-010) adds read-only taxonomic navigation queries over the existing tables:
+ * no new `@Entity` and no schema change, so the version stays at 3.
  */
 @Database(
     entities = [
@@ -47,6 +51,8 @@ abstract class SonusDatabase : RoomDatabase() {
     abstract fun albumDao(): AlbumDao
 
     abstract fun trackDao(): TrackDao
+
+    abstract fun catalogBrowseDao(): CatalogBrowseDao
 
     abstract fun settingsDao(): SettingsDao
 }

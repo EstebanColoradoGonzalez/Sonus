@@ -7,6 +7,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.estebancoloradogonzalez.sonus.core.data.local.room.SonusDatabase
 import com.estebancoloradogonzalez.sonus.core.data.local.room.dao.AlbumDao
 import com.estebancoloradogonzalez.sonus.core.data.local.room.dao.ArtistDao
+import com.estebancoloradogonzalez.sonus.core.data.local.room.dao.CatalogBrowseDao
 import com.estebancoloradogonzalez.sonus.core.data.local.room.dao.GenreDao
 import com.estebancoloradogonzalez.sonus.core.data.local.room.dao.SettingsDao
 import com.estebancoloradogonzalez.sonus.core.data.local.room.dao.SourceFolderDao
@@ -59,6 +60,9 @@ object DatabaseModule {
 
     @Provides
     fun provideTrackDao(database: SonusDatabase): TrackDao = database.trackDao()
+
+    @Provides
+    fun provideCatalogBrowseDao(database: SonusDatabase): CatalogBrowseDao = database.catalogBrowseDao()
 
     @Provides
     fun provideSettingsDao(database: SonusDatabase): SettingsDao = database.settingsDao()

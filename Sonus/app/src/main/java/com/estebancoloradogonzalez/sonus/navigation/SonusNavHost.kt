@@ -9,7 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.estebancoloradogonzalez.sonus.feature.library.presentation.LibraryLandingScreen
+import com.estebancoloradogonzalez.sonus.feature.library.presentation.browse.LibraryScreen
 import com.estebancoloradogonzalez.sonus.feature.library.presentation.scan.ScanProgressOverlay
 import com.estebancoloradogonzalez.sonus.feature.library.presentation.scan.ScanScreen
 import com.estebancoloradogonzalez.sonus.feature.settings.presentation.onboarding.NotificationPermissionScreen
@@ -34,8 +34,8 @@ private object SonusRoute {
  * [SonusAppViewModel]: on a recurring start [startAtLibrary] is `true` and the graph opens directly
  * on the library, omitting the onboarding steps (Escenario 3). [onOnboardingCompleted] fires once on
  * the SCAN → LIBRARY transition — the single funnel shared by both US-003 branches (Escenario 1/4) —
- * to close the first-run flow. The library destination is a placeholder for the real library view
- * (EPIC-02+).
+ * to close the first-run flow. The library destination renders the taxonomic navigation view
+ * (US-010).
  *
  * The graph is wrapped in a [Box] so the global scan-progress overlay (US-009) can be presented on
  * top of the main-app destinations (`LIBRARY`/`SETTINGS_SOURCE_FOLDERS`), blocking navigation while a
@@ -85,7 +85,7 @@ fun SonusNavHost(
                 )
             }
             composable(SonusRoute.LIBRARY) {
-                LibraryLandingScreen(
+                LibraryScreen(
                     onNavigateToSourceFolders = {
                         navController.navigate(SonusRoute.SETTINGS_SOURCE_FOLDERS)
                     },

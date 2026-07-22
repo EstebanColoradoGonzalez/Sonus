@@ -34,4 +34,24 @@
     <string name="library_landing_title">Tu biblioteca</string>
     <string name="library_landing_body">Aquí verás tu colección organizada, lista para explorar y reproducir.</string>
     <string name="library_add_source_folder">Agregar carpeta</string>
+    <string name="library_title">Mi Biblioteca</string>
+    <string name="library_tab_music">Música</string>
+    <string name="library_tab_podcasts">Podcasts</string>
+    <string name="library_tab_genres">Géneros</string>
+    <string name="library_tab_artists">Artistas</string>
+    <string name="library_tab_albums">Álbumes</string>
+    <string name="library_no_title">Sin título</string>
+    <string name="library_no_artist">Sin artista</string>
+    <string name="library_no_album">Sin álbum</string>
+    <string name="library_no_genre">Sin género</string>
+    <string name="library_item_count">%1$d pistas</string>
+    <string name="library_track_unsupported">No reproducible</string>
+    <string name="library_track_artwork_placeholder">Sin carátula</string>
+    <string name="library_back">Volver</string>
+    <string name="library_manage_folders">Carpetas fuente</string>
+    <string name="library_empty_catalog">Tu biblioteca está vacía. Agrega carpetas fuente para comenzar.</string>
+    <string name="library_empty_genres">No hay géneros en tu biblioteca.</string>
+    <string name="library_empty_artists">No hay artistas en tu biblioteca.</string>
+    <string name="library_empty_albums">No hay álbumes en tu biblioteca.</string>
+    <string name="library_empty_tracks">No hay pistas en esta vista.</string>
 </resources>
