@@ -12,9 +12,13 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 
 /**
- * Runs the foundational scan off the main thread (ADR-006, [RNF-03]). A `CoroutineWorker` so it is
+ * Runs the library scan off the main thread (ADR-006, [RNF-03]). A `CoroutineWorker` so it is
  * cancelable and survives UI lifecycle changes; single-flight is enforced by the scheduler. Progress
  * is published by the use case through the shared scan-state channel, not by this worker.
+ *
+ * The [ScanMode] is read from the [WorkerParameters] input data ([KEY_MODE]) so the onboarding
+ * foundational scan (US-003, `FULL`) and the manual re-scan (US-007, `INCREMENTAL`/`FULL`) share a
+ * single worker; a missing/invalid value defaults defensively to [ScanMode.FULL].
  */
 @HiltWorker
 class LibraryScanWorker
@@ -24,9 +28,19 @@ class LibraryScanWorker
         @Assisted params: WorkerParameters,
         private val scanLibraryUseCase: ScanLibraryUseCase,
     ) : CoroutineWorker(context, params) {
-        override suspend fun doWork(): Result =
-            when (scanLibraryUseCase(LibraryCommand.Scan(ScanMode.FULL))) {
+        override suspend fun doWork(): Result {
+            val mode =
+                inputData.getString(KEY_MODE)
+                    ?.let { runCatching { ScanMode.valueOf(it) }.getOrNull() }
+                    ?: ScanMode.FULL
+            return when (scanLibraryUseCase(LibraryCommand.Scan(mode))) {
                 is OperationResult.Success -> Result.success()
                 is OperationResult.Failure -> Result.failure()
             }
+        }
+
+        companion object {
+            /** Input-data key carrying the [ScanMode] name enqueued by the scheduler. */
+            const val KEY_MODE = "scan_mode"
+        }
     }

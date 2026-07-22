@@ -2,6 +2,7 @@ package com.estebancoloradogonzalez.sonus.feature.settings.presentation.settings
 
 import app.cash.turbine.test
 import com.estebancoloradogonzalez.sonus.core.domain.error.DomainError
+import com.estebancoloradogonzalez.sonus.core.domain.model.ScanMode
 import com.estebancoloradogonzalez.sonus.core.domain.model.SourceFolder
 import com.estebancoloradogonzalez.sonus.core.domain.result.OperationResult
 import com.estebancoloradogonzalez.sonus.core.domain.usecase.AddSourceFolderUseCase
@@ -9,10 +10,12 @@ import com.estebancoloradogonzalez.sonus.core.domain.usecase.DetectSourceFolderO
 import com.estebancoloradogonzalez.sonus.core.domain.usecase.GetSourceFolderRemovalImpactUseCase
 import com.estebancoloradogonzalez.sonus.core.domain.usecase.ObserveSourceFoldersUseCase
 import com.estebancoloradogonzalez.sonus.core.domain.usecase.RemoveSourceFolderUseCase
+import com.estebancoloradogonzalez.sonus.core.domain.usecase.RescanLibraryUseCase
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -31,6 +34,7 @@ class SettingsSourceFoldersViewModelTest {
     private val addSourceFolder = mockk<AddSourceFolderUseCase>()
     private val getRemovalImpact = mockk<GetSourceFolderRemovalImpactUseCase>()
     private val removeSourceFolder = mockk<RemoveSourceFolderUseCase>()
+    private val rescanLibrary = mockk<RescanLibraryUseCase>(relaxed = true)
 
     @BeforeEach
     fun setUp() {
@@ -50,6 +54,7 @@ class SettingsSourceFoldersViewModelTest {
             addSourceFolder,
             getRemovalImpact,
             removeSourceFolder,
+            rescanLibrary,
         )
     }
 
@@ -220,5 +225,32 @@ class SettingsSourceFoldersViewModelTest {
             vm.onCommand(SettingsSourceFoldersCommand.RemoveFolderDismissed)
 
             assertThat(vm.uiState.value.pendingRemoval).isNull()
+        }
+
+    @Test
+    fun `enqueues an incremental rescan clearing pending scan on RescanClicked with folders`() =
+        runTest {
+            // US-007 AC1 — manual re-scan with at least one folder configured
+            val vm = viewModel(listOf(folder(1L)))
+
+            vm.events.test {
+                vm.onCommand(SettingsSourceFoldersCommand.RescanClicked)
+                assertThat(awaitItem()).isEqualTo(SettingsSourceFoldersEvent.NotifyRescanStarted)
+            }
+            assertThat(vm.uiState.value.hasPendingScanContent).isFalse()
+            verify(exactly = 1) { rescanLibrary(ScanMode.INCREMENTAL) }
+        }
+
+    @Test
+    fun `notifies no folders and does not enqueue on RescanClicked without folders`() =
+        runTest {
+            // US-007 — the scan needs at least one source folder (US-005 precondition)
+            val vm = viewModel(emptyList())
+
+            vm.events.test {
+                vm.onCommand(SettingsSourceFoldersCommand.RescanClicked)
+                assertThat(awaitItem()).isEqualTo(SettingsSourceFoldersEvent.NotifyNoFoldersToScan)
+            }
+            verify(exactly = 0) { rescanLibrary(any()) }
         }
 }

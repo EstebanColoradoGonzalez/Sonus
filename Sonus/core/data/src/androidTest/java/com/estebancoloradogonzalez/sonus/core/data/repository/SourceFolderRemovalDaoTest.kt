@@ -59,8 +59,14 @@ class SourceFolderRemovalDaoTest {
     fun removesFolderCascadingTracksAndPurgingOrphanDimensions() =
         runTest {
             // Arrange: two folders, each with its own dimensions and tracks.
-            val folderA = database.sourceFolderDao().insert(SourceFolder(treeUri = "content://tree/a", displayPath = "A", dateAddedMs = 1L))
-            val folderB = database.sourceFolderDao().insert(SourceFolder(treeUri = "content://tree/b", displayPath = "B", dateAddedMs = 2L))
+            val folderA =
+                database.sourceFolderDao().insert(
+                    SourceFolder(treeUri = "content://tree/a", displayPath = "A", dateAddedMs = 1L),
+                )
+            val folderB =
+                database.sourceFolderDao().insert(
+                    SourceFolder(treeUri = "content://tree/b", displayPath = "B", dateAddedMs = 2L),
+                )
 
             database.artistDao().insertIgnore(Artist(name = "Rock Artist"))
             val rockArtist = database.artistDao().findIdByName("Rock Artist")!!

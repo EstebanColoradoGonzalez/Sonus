@@ -109,6 +109,41 @@ class CatalogSynchronizerTest {
             assertThat(database.artistDao().findIdByName("")).isEqualTo(1)
         }
 
+    @Test
+    fun reScanOnNonEmptyCatalogAddsPurgesAndCountsSummary() =
+        runTest {
+            // Arrange — first scan populates a non-empty catalog with two distinct dimension sets
+            synchronizer.sync(
+                listOf(
+                    scannedTrack("content://doc/a", "Rock", "AlbumR", "Pop"),
+                    scannedTrack("content://doc/b", "Jazz", "AlbumJ", "Smooth"),
+                ),
+            )
+
+            // Act — a re-scan where: 'a' remains, 'b' disappears (purge), a new 'c' with absent
+            // metadata is added, and an undecodable 'd' is indexed as UNSUPPORTED (US-007 AC2/3/4/5/9/10)
+            val summary =
+                synchronizer.sync(
+                    listOf(
+                        scannedTrack("content://doc/a", "Rock", "AlbumR", "Pop"),
+                        scannedTrack("content://doc/c", null, null, null),
+                        scannedTrack("content://doc/d", null, null, null, TrackAvailability.UNSUPPORTED),
+                    ),
+                )
+
+            // Assert — deterministic counters and coherent catalog
+            assertThat(summary.added).isEqualTo(2)
+            assertThat(summary.purged).isEqualTo(1)
+            assertThat(summary.unsupported).isEqualTo(1)
+            assertThat(summary.orphanDimsPurged).isEqualTo(3)
+            assertThat(database.trackDao().findIdByUri("content://doc/b")).isNull()
+            assertThat(database.trackDao().findIdByUri("content://doc/c")).isNotNull()
+            assertThat(database.artistDao().findIdByName("Jazz")).isNull()
+            assertThat(database.artistDao().findIdByName("Rock")).isNotNull()
+            // Absent metadata resolved to the sentinel, never inferred (Invariant 4)
+            assertThat(database.artistDao().findIdByName("")).isEqualTo(1)
+        }
+
     private object FixedTimeProvider : TimeProvider {
         override fun nowMs(): Long = 1_000L
     }

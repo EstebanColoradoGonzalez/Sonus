@@ -4,12 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.estebancoloradogonzalez.sonus.core.domain.command.LibraryCommand
 import com.estebancoloradogonzalez.sonus.core.domain.error.DomainError
+import com.estebancoloradogonzalez.sonus.core.domain.model.ScanMode
 import com.estebancoloradogonzalez.sonus.core.domain.result.OperationResult
 import com.estebancoloradogonzalez.sonus.core.domain.usecase.AddSourceFolderUseCase
 import com.estebancoloradogonzalez.sonus.core.domain.usecase.DetectSourceFolderOverlapUseCase
 import com.estebancoloradogonzalez.sonus.core.domain.usecase.GetSourceFolderRemovalImpactUseCase
 import com.estebancoloradogonzalez.sonus.core.domain.usecase.ObserveSourceFoldersUseCase
 import com.estebancoloradogonzalez.sonus.core.domain.usecase.RemoveSourceFolderUseCase
+import com.estebancoloradogonzalez.sonus.core.domain.usecase.RescanLibraryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -42,6 +44,7 @@ class SettingsSourceFoldersViewModel
         private val addSourceFolder: AddSourceFolderUseCase,
         private val getRemovalImpact: GetSourceFolderRemovalImpactUseCase,
         private val removeSourceFolder: RemoveSourceFolderUseCase,
+        private val rescanLibrary: RescanLibraryUseCase,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(SettingsSourceFoldersUiState())
         val uiState: StateFlow<SettingsSourceFoldersUiState> = _uiState.asStateFlow()
@@ -73,7 +76,21 @@ class SettingsSourceFoldersViewModel
                 SettingsSourceFoldersCommand.RemoveFolderConfirmed -> confirmRemoval()
                 SettingsSourceFoldersCommand.RemoveFolderDismissed ->
                     _uiState.update { it.copy(pendingRemoval = null) }
+                SettingsSourceFoldersCommand.RescanClicked -> requestRescan()
             }
+
+        private fun requestRescan() {
+            // The scan needs at least one source folder (US-005 precondition); guard before enqueuing.
+            if (_uiState.value.folders.isEmpty()) {
+                emit(SettingsSourceFoldersEvent.NotifyNoFoldersToScan)
+                return
+            }
+            // Fire-and-forget: the scan runs in the background (WorkManager, single-flight); the UI is
+            // never blocked (AC7) and progress is observed by US-009, not here.
+            rescanLibrary(ScanMode.INCREMENTAL)
+            _uiState.update { it.copy(hasPendingScanContent = false) }
+            emit(SettingsSourceFoldersEvent.NotifyRescanStarted)
+        }
 
         private fun addFolder(treeUri: String) {
             viewModelScope.launch {

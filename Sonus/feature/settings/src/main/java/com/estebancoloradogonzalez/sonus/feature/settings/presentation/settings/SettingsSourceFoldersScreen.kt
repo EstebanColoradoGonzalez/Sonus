@@ -31,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -57,13 +58,7 @@ fun SettingsSourceFoldersScreen(
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val addedNotice = stringResource(R.string.settings_source_folders_added_notice)
-    val overlapNotice = stringResource(R.string.settings_source_folders_overlap_notice)
-    val duplicateNotice = stringResource(R.string.settings_source_folders_duplicate_notice)
-    val permissionDeniedNotice = stringResource(R.string.settings_source_folders_permission_denied_notice)
-    val cancelledNotice = stringResource(R.string.settings_source_folders_cancelled_notice)
-    val removedNotice = stringResource(R.string.settings_source_folders_removed_notice)
-    val removeFailedNotice = stringResource(R.string.settings_source_folders_remove_failed_notice)
+    val context = LocalContext.current
 
     val folderPickerLauncher =
         rememberLauncherForActivityResult(
@@ -78,22 +73,11 @@ fun SettingsSourceFoldersScreen(
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
-            when (event) {
-                SettingsSourceFoldersEvent.LaunchFolderPicker -> folderPickerLauncher.launch(null)
-                SettingsSourceFoldersEvent.NotifyFolderAdded ->
-                    scope.launch { snackbarHostState.showSnackbar(addedNotice) }
-                SettingsSourceFoldersEvent.NotifyOverlap ->
-                    scope.launch { snackbarHostState.showSnackbar(overlapNotice) }
-                SettingsSourceFoldersEvent.NotifyDuplicate ->
-                    scope.launch { snackbarHostState.showSnackbar(duplicateNotice) }
-                SettingsSourceFoldersEvent.NotifyPermissionDenied ->
-                    scope.launch { snackbarHostState.showSnackbar(permissionDeniedNotice) }
-                SettingsSourceFoldersEvent.NotifySelectionCancelled ->
-                    scope.launch { snackbarHostState.showSnackbar(cancelledNotice) }
-                SettingsSourceFoldersEvent.NotifyFolderRemoved ->
-                    scope.launch { snackbarHostState.showSnackbar(removedNotice) }
-                SettingsSourceFoldersEvent.NotifyRemoveFailed ->
-                    scope.launch { snackbarHostState.showSnackbar(removeFailedNotice) }
+            val noticeRes = event.noticeRes()
+            if (noticeRes == null) {
+                folderPickerLauncher.launch(null)
+            } else {
+                scope.launch { snackbarHostState.showSnackbar(context.getString(noticeRes)) }
             }
         }
     }
@@ -127,9 +111,29 @@ fun SettingsSourceFoldersScreen(
             onRemoveFolder = { folder ->
                 viewModel.onCommand(SettingsSourceFoldersCommand.RemoveFolderClicked(folder.id, folder.displayPath))
             },
+            onRescan = { viewModel.onCommand(SettingsSourceFoldersCommand.RescanClicked) },
         )
     }
 }
+
+/**
+ * Resolves the string resource for a one-shot notice event, or `null` when the event is not a
+ * snackbar notice ([SettingsSourceFoldersEvent.LaunchFolderPicker], handled separately). Exhaustive
+ * `when` (no `else`) so a new event fails to compile until it is mapped.
+ */
+private fun SettingsSourceFoldersEvent.noticeRes(): Int? =
+    when (this) {
+        SettingsSourceFoldersEvent.LaunchFolderPicker -> null
+        SettingsSourceFoldersEvent.NotifyFolderAdded -> R.string.settings_source_folders_added_notice
+        SettingsSourceFoldersEvent.NotifyOverlap -> R.string.settings_source_folders_overlap_notice
+        SettingsSourceFoldersEvent.NotifyDuplicate -> R.string.settings_source_folders_duplicate_notice
+        SettingsSourceFoldersEvent.NotifyPermissionDenied -> R.string.settings_source_folders_permission_denied_notice
+        SettingsSourceFoldersEvent.NotifySelectionCancelled -> R.string.settings_source_folders_cancelled_notice
+        SettingsSourceFoldersEvent.NotifyFolderRemoved -> R.string.settings_source_folders_removed_notice
+        SettingsSourceFoldersEvent.NotifyRemoveFailed -> R.string.settings_source_folders_remove_failed_notice
+        SettingsSourceFoldersEvent.NotifyRescanStarted -> R.string.settings_source_folders_rescan_started
+        SettingsSourceFoldersEvent.NotifyNoFoldersToScan -> R.string.settings_source_folders_rescan_no_folders
+    }
 
 @Composable
 private fun RemoveFolderDialog(
@@ -178,6 +182,7 @@ private fun SettingsSourceFoldersContent(
     uiState: SettingsSourceFoldersUiState,
     onAddFolder: () -> Unit,
     onRemoveFolder: (SourceFolderUi) -> Unit,
+    onRescan: () -> Unit,
 ) {
     Column(
         modifier =
@@ -220,6 +225,16 @@ private fun SettingsSourceFoldersContent(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(text = stringResource(R.string.settings_source_folders_add))
+        }
+        OutlinedButton(
+            onClick = onRescan,
+            enabled = uiState.folders.isNotEmpty(),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+        ) {
+            Text(text = stringResource(R.string.settings_source_folders_rescan_action))
         }
     }
 }

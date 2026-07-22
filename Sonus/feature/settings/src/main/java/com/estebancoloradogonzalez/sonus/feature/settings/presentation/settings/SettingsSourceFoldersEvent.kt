@@ -28,4 +28,10 @@ sealed interface SettingsSourceFoldersEvent {
 
     /** Non-intrusive notice: the folder was already gone when confirming (US-006 AC9, `ERR_ENTITY_NOT_FOUND`). */
     data object NotifyRemoveFailed : SettingsSourceFoldersEvent
+
+    /** Non-intrusive confirmation: a manual re-scan was enqueued in the background (US-007 AC1/AC7). */
+    data object NotifyRescanStarted : SettingsSourceFoldersEvent
+
+    /** Non-intrusive notice: there are no source folders to scan, so the re-scan was not enqueued (US-007). */
+    data object NotifyNoFoldersToScan : SettingsSourceFoldersEvent
 }

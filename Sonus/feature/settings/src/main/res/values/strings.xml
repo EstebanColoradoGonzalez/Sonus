@@ -37,4 +37,7 @@
     <string name="settings_source_folders_remove_cancel">Cancelar</string>
     <string name="settings_source_folders_removed_notice">Carpeta quitada.</string>
     <string name="settings_source_folders_remove_failed_notice">Esa carpeta ya no existe; la lista se actualizó.</string>
+    <string name="settings_source_folders_rescan_action">Re-escanear biblioteca</string>
+    <string name="settings_source_folders_rescan_started">Re-escaneo iniciado. Actualizaremos tu biblioteca en segundo plano.</string>
+    <string name="settings_source_folders_rescan_no_folders">Agrega al menos una carpeta antes de re-escanear.</string>
 </resources>
