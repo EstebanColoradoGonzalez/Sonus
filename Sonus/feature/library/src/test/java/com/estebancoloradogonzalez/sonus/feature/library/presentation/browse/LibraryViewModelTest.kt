@@ -2,6 +2,7 @@ package com.estebancoloradogonzalez.sonus.feature.library.presentation.browse
 
 import com.estebancoloradogonzalez.sonus.core.domain.model.AlbumView
 import com.estebancoloradogonzalez.sonus.core.domain.model.ArtistView
+import com.estebancoloradogonzalez.sonus.core.domain.model.BrowseQuery
 import com.estebancoloradogonzalez.sonus.core.domain.model.ContentType
 import com.estebancoloradogonzalez.sonus.core.domain.model.GenreView
 import com.estebancoloradogonzalez.sonus.core.domain.model.TrackAvailability
@@ -20,6 +21,8 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -34,10 +37,12 @@ class LibraryViewModelTest {
     private val listArtists = mockk<ListArtistsUseCase>()
     private val listAlbums = mockk<ListAlbumsUseCase>()
     private val observeCatalogEmpty = mockk<ObserveCatalogEmptyUseCase>()
+    private val dispatcher = UnconfinedTestDispatcher()
+    private val browseQueries = mutableListOf<BrowseQuery>()
 
     @BeforeEach
     fun setUp() {
-        Dispatchers.setMain(UnconfinedTestDispatcher())
+        Dispatchers.setMain(dispatcher)
     }
 
     @AfterEach
@@ -68,7 +73,7 @@ class LibraryViewModelTest {
         )
 
     private fun viewModel(catalogEmpty: Boolean = false): LibraryViewModel {
-        every { browseCatalog(any()) } returns flowOf(listOf(track))
+        every { browseCatalog(capture(browseQueries)) } returns flowOf(listOf(track))
         every { listGenres(any()) } returns flowOf(listOf(genre))
         every { listArtists(any(), any()) } returns flowOf(listOf(artist))
         every { listAlbums(any(), any()) } returns flowOf(listOf(album))
@@ -162,5 +167,93 @@ class LibraryViewModelTest {
 
             // Assert
             assertThat(vm.uiState.value.isCatalogEmpty).isTrue()
+        }
+
+    @Test
+    fun `starts with an empty inactive text filter`() =
+        runTest(dispatcher) {
+            // Arrange (US-011 Esc 6)
+            val vm = viewModel()
+
+            // Act
+            keepSubscribed(vm)
+
+            // Assert — empty field on entry, unfiltered content
+            assertThat(vm.uiState.value.textFilter).isEmpty()
+            assertThat(vm.uiState.value.isSearchActive).isFalse()
+            assertThat(vm.uiState.value.content).isEqualTo(LibraryContent.Genres(listOf(genre)))
+        }
+
+    @Test
+    fun `applies the debounced text filter producing a filtered track list`() =
+        runTest(dispatcher) {
+            // Arrange (US-011 Esc 1)
+            val vm = viewModel()
+            keepSubscribed(vm)
+
+            // Act — type a term and let the debounce elapse
+            vm.onCommand(LibraryCommand.SetTextFilter("Bohemian"))
+            advanceUntilIdle()
+
+            // Assert — the field updates, content becomes a track list, the query carries the term
+            assertThat(vm.uiState.value.textFilter).isEqualTo("Bohemian")
+            assertThat(vm.uiState.value.isSearchActive).isTrue()
+            assertThat(vm.uiState.value.content).isEqualTo(LibraryContent.Tracks(listOf(track)))
+            assertThat(browseQueries.last()).isEqualTo(BrowseQuery(textFilter = "Bohemian"))
+        }
+
+    @Test
+    fun `clearing the text filter restores the unfiltered view`() =
+        runTest(dispatcher) {
+            // Arrange (US-011 Esc 3)
+            val vm = viewModel()
+            keepSubscribed(vm)
+            vm.onCommand(LibraryCommand.SetTextFilter("Bohemian"))
+            advanceUntilIdle()
+
+            // Act
+            vm.onCommand(LibraryCommand.ClearTextFilter)
+            advanceUntilIdle()
+
+            // Assert — back to the dimension content with no active filter
+            assertThat(vm.uiState.value.textFilter).isEmpty()
+            assertThat(vm.uiState.value.isSearchActive).isFalse()
+            assertThat(vm.uiState.value.content).isEqualTo(LibraryContent.Genres(listOf(genre)))
+        }
+
+    @Test
+    fun `intersects the text filter with the active dimension`() =
+        runTest(dispatcher) {
+            // Arrange (US-011 Esc 4)
+            val vm = viewModel()
+            keepSubscribed(vm)
+            vm.onCommand(LibraryCommand.SelectDimension(BrowseDimension.MUSIC))
+
+            // Act
+            vm.onCommand(LibraryCommand.SetTextFilter("Queen"))
+            advanceUntilIdle()
+
+            // Assert — the query intersects the MUSIC content type with the term
+            assertThat(browseQueries.last())
+                .isEqualTo(BrowseQuery(contentType = ContentType.MUSIC, textFilter = "Queen"))
+        }
+
+    @Test
+    fun `coalesces rapid keystrokes into a single filtered query`() =
+        runTest(dispatcher) {
+            // Arrange (US-011 Esc 5 / contract §4.1) — no browse query yet on the genres root
+            val vm = viewModel()
+            keepSubscribed(vm)
+
+            // Act — three keystrokes closer together than the debounce window
+            vm.onCommand(LibraryCommand.SetTextFilter("B"))
+            advanceTimeBy(100)
+            vm.onCommand(LibraryCommand.SetTextFilter("Bo"))
+            advanceTimeBy(100)
+            vm.onCommand(LibraryCommand.SetTextFilter("Boh"))
+            advanceUntilIdle()
+
+            // Assert — only the final term reached the catalog query (no per-keystroke queries)
+            assertThat(browseQueries.mapNotNull { it.textFilter }).containsExactly("Boh")
         }
 }

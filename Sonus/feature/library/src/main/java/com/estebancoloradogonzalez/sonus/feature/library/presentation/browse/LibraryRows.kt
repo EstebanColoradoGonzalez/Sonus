@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,8 +12,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,6 +27,33 @@ import com.estebancoloradogonzalez.sonus.core.domain.model.GenreView
 import com.estebancoloradogonzalez.sonus.core.domain.model.TrackAvailability
 import com.estebancoloradogonzalez.sonus.core.domain.model.TrackView
 import com.estebancoloradogonzalez.sonus.feature.library.R
+
+/** Free-text search field of the library screen (US-011). A trailing clear button appears when the
+ * field holds text. Called from `LibraryScreen`; the debounce lives in the ViewModel (contract §4.1). */
+@Composable
+internal fun SearchField(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onClear: () -> Unit,
+) {
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+        placeholder = { Text(text = stringResource(R.string.library_search_hint)) },
+        singleLine = true,
+        trailingIcon = {
+            if (query.isNotEmpty()) {
+                TextButton(onClick = onClear) {
+                    Text(text = stringResource(R.string.library_search_clear))
+                }
+            }
+        },
+    )
+}
 
 /** Renders the current navigation level as a virtualized list (US-010). Called from `LibraryScreen`. */
 @Composable

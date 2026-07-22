@@ -54,4 +54,7 @@
     <string name="library_empty_artists">No hay artistas en tu biblioteca.</string>
     <string name="library_empty_albums">No hay álbumes en tu biblioteca.</string>
     <string name="library_empty_tracks">No hay pistas en esta vista.</string>
+    <string name="library_search_hint">Buscar por título, artista o álbum…</string>
+    <string name="library_search_clear">Limpiar</string>
+    <string name="library_search_empty">No se encontraron pistas.</string>
 </resources>

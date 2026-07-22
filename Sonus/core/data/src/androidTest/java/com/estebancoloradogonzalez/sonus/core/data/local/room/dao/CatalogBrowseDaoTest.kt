@@ -109,7 +109,7 @@ class CatalogBrowseDaoTest {
             seedCatalog()
 
             // Act
-            val result = dao.browseTracks(ContentType.MUSIC, null, null, null).first()
+            val result = dao.browseTracks(ContentType.MUSIC, null, null, null, null).first()
 
             // Assert — only MUSIC and non-MISSING tracks (t1, t2, t4, t6)
             assertThat(result.map { it.uri }).containsExactly("t1", "t2", "t4", "t6")
@@ -123,7 +123,7 @@ class CatalogBrowseDaoTest {
             seedCatalog()
 
             // Act
-            val result = dao.browseTracks(ContentType.PODCAST, null, null, null).first()
+            val result = dao.browseTracks(ContentType.PODCAST, null, null, null, null).first()
 
             // Assert
             assertThat(result.map { it.uri }).containsExactly("t3")
@@ -184,11 +184,90 @@ class CatalogBrowseDaoTest {
             seedCatalog()
 
             // Act
-            val result = dao.browseAlbumTracks(albumId = 30, availability = null).first()
+            val result = dao.browseAlbumTracks(albumId = 30, availability = null, textFilter = null).first()
 
             // Assert — t2 (#1), t1 (#2), t4 (no number → last); UNSUPPORTED stays visible
             assertThat(result.map { it.uri }).containsExactly("t2", "t1", "t4").inOrder()
             assertThat(result.last().availability).isEqualTo(TrackAvailability.UNSUPPORTED)
+        }
+
+    @Test
+    fun browseTracksByTitleTextFilterMatchesOnlyTitle() =
+        runTest {
+            // Arrange (US-011 Esc 1) — "Pod" only appears in t3's title
+            seedCatalog()
+
+            // Act
+            val result = dao.browseTracks(null, null, null, null, "Pod").first()
+
+            // Assert
+            assertThat(result.map { it.uri }).containsExactly("t3")
+        }
+
+    @Test
+    fun browseTracksByArtistTextFilterIsCaseInsensitiveAndExcludesSentinel() =
+        runTest {
+            // Arrange (US-011 Esc 1) — lowercase "queen" matches the "Queen" artist of t1/t2/t4
+            seedCatalog()
+
+            // Act
+            val result = dao.browseTracks(ContentType.MUSIC, null, null, null, "queen").first()
+
+            // Assert — case-insensitive artist match; the blank-name sentinel track (t6) never matches
+            assertThat(result.map { it.uri }).containsExactly("t1", "t2", "t4")
+            assertThat(result.map { it.uri }).doesNotContain("t6")
+        }
+
+    @Test
+    fun browseTracksByAlbumTextFilterIsCaseInsensitive() =
+        runTest {
+            // Arrange (US-011 Esc 1) — lowercase "opera" matches the "Opera" album of t1/t2/t4
+            seedCatalog()
+
+            // Act
+            val result = dao.browseTracks(null, null, null, null, "opera").first()
+
+            // Assert
+            assertThat(result.map { it.uri }).containsExactly("t1", "t2", "t4")
+        }
+
+    @Test
+    fun browseTracksTextFilterWithoutMatchesReturnsEmpty() =
+        runTest {
+            // Arrange (US-011 Esc 2) — no track matches the term
+            seedCatalog()
+
+            // Act
+            val result = dao.browseTracks(null, null, null, null, "zzz").first()
+
+            // Assert — empty list, never an error
+            assertThat(result).isEmpty()
+        }
+
+    @Test
+    fun browseTracksTextFilterIntersectsWithContentType() =
+        runTest {
+            // Arrange (US-011 Esc 4) — "Pod" alone matches t3, but t3 is a PODCAST
+            seedCatalog()
+
+            // Act
+            val result = dao.browseTracks(ContentType.MUSIC, null, null, null, "Pod").first()
+
+            // Assert — the MUSIC dimension intersected with the text yields nothing
+            assertThat(result).isEmpty()
+        }
+
+    @Test
+    fun browseAlbumTracksAppliesTextFilter() =
+        runTest {
+            // Arrange (US-011 Esc 4) — within album Opera only t4's title contains "U"
+            seedCatalog()
+
+            // Act
+            val result = dao.browseAlbumTracks(albumId = 30, availability = null, textFilter = "U").first()
+
+            // Assert
+            assertThat(result.map { it.uri }).containsExactly("t4")
         }
 
     @Test

@@ -40,6 +40,9 @@ interface CatalogBrowseDao {
             "AND (:genreId IS NULL OR t.genreId = :genreId) " +
             "AND (:artistId IS NULL OR t.artistId = :artistId) " +
             "AND (:availability IS NULL OR t.availability = :availability) " +
+            "AND (:textFilter IS NULL OR t.title LIKE '%' || :textFilter || '%' " +
+            "OR ar.name LIKE '%' || :textFilter || '%' " +
+            "OR al.name LIKE '%' || :textFilter || '%') " +
             "ORDER BY t.title IS NULL, t.title COLLATE NOCASE",
     )
     fun browseTracks(
@@ -47,6 +50,7 @@ interface CatalogBrowseDao {
         genreId: Long?,
         artistId: Long?,
         availability: TrackAvailability?,
+        textFilter: String?,
     ): Flow<List<TrackView>>
 
     @Query(
@@ -63,11 +67,15 @@ interface CatalogBrowseDao {
             "JOIN genre g ON g.id = t.genreId " +
             "WHERE t.availability != 'MISSING' AND t.albumId = :albumId " +
             "AND (:availability IS NULL OR t.availability = :availability) " +
+            "AND (:textFilter IS NULL OR t.title LIKE '%' || :textFilter || '%' " +
+            "OR ar.name LIKE '%' || :textFilter || '%' " +
+            "OR al.name LIKE '%' || :textFilter || '%') " +
             "ORDER BY t.trackNumber IS NULL, t.trackNumber ASC, t.title COLLATE NOCASE",
     )
     fun browseAlbumTracks(
         albumId: Long,
         availability: TrackAvailability?,
+        textFilter: String?,
     ): Flow<List<TrackView>>
 
     @Query(

@@ -86,6 +86,11 @@ private fun LibraryScaffold(
                 selected = uiState.selectedDimension,
                 onSelect = { onCommand(LibraryCommand.SelectDimension(it)) },
             )
+            SearchField(
+                query = uiState.textFilter,
+                onQueryChange = { onCommand(LibraryCommand.SetTextFilter(it)) },
+                onClear = { onCommand(LibraryCommand.ClearTextFilter) },
+            )
             if (uiState.canNavigateUp) {
                 Breadcrumb(
                     node = uiState.currentNode,
@@ -162,10 +167,10 @@ private fun LoadingBody() {
 @Composable
 private fun EmptyBody(uiState: LibraryUiState) {
     val message =
-        if (uiState.isCatalogEmpty) {
-            stringResource(R.string.library_empty_catalog)
-        } else {
-            stringResource(uiState.content.emptyMessageRes())
+        when {
+            uiState.isSearchActive -> stringResource(R.string.library_search_empty)
+            uiState.isCatalogEmpty -> stringResource(R.string.library_empty_catalog)
+            else -> stringResource(uiState.content.emptyMessageRes())
         }
     Box(
         modifier =

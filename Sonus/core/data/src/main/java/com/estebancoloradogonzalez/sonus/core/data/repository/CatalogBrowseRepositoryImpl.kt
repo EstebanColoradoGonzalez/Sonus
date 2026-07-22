@@ -25,13 +25,14 @@ class CatalogBrowseRepositoryImpl
         override fun browse(query: BrowseQuery): Flow<List<TrackView>> {
             val albumId = query.albumId
             return if (albumId != null) {
-                catalogBrowseDao.browseAlbumTracks(albumId, query.availability)
+                catalogBrowseDao.browseAlbumTracks(albumId, query.availability, query.textFilter)
             } else {
                 catalogBrowseDao.browseTracks(
                     contentType = query.contentType,
                     genreId = query.genreId,
                     artistId = query.artistId,
                     availability = query.availability,
+                    textFilter = query.textFilter,
                 )
             }
         }
